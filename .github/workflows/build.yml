@@ -1,4 +1,4 @@
-name: Build Font from PNGs
+name: Build Minecraft-TwentyOne Font
 
 on:
   workflow_dispatch:
@@ -6,25 +6,27 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python (or Node, if you prefer)
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install bits-n-picas (or your preferred tool)
+      - name: Install bits-n-picas
         run: |
           pip install bits-n-picas
 
-      - name: Build TTF/WOFF from PNGs
+      - name: Build TTF from PNGs
         run: |
-          bnp-glyph-pack -f ./glyphs/ -o ./output/font.ttf
+          mkdir -p output
+          bnp-glyph-pack -f ./glyphs/ -o ./output/Minecraft-TwentyOne.ttf
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: font-files
+          name: Minecraft-TwentyOne-font
           path: ./output/
