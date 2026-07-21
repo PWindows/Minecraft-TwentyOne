@@ -1,0 +1,30 @@
+name: Build Font from PNGs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python (or Node, if you prefer)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install bits-n-picas (or your preferred tool)
+        run: |
+          pip install bits-n-picas
+
+      - name: Build TTF/WOFF from PNGs
+        run: |
+          bnp-glyph-pack -f ./glyphs/ -o ./output/font.ttf
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: font-files
+          path: ./output/
