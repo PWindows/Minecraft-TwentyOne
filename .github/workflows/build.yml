@@ -11,10 +11,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install FontForge
+      - name: Install FontForge and Python bindings
         run: |
           sudo apt-get update
-          sudo apt-get install -y fontforge
+          sudo apt-get install -y fontforge python3-fontforge
 
       - name: Build TTF from SVGs
         run: |
@@ -32,12 +32,11 @@ jobs:
           font.version = "1.0.0"
           font.copyright = "Copyright (c) 2026 PeterMaZep"
 
-          # Import each SVG as a glyph
           for svg_file in glob.glob("./glyphs/*.svg"):
               unicode_hex = os.path.basename(svg_file).replace(".svg", "").replace("U+", "")
               unicode_int = int(unicode_hex, 16)
               glyph = font.createChar(unicode_int)
-              glyph.importOutlines(svg_file)  # SVG is vector, works perfectly
+              glyph.importOutlines(svg_file)
               glyph.width = 2100
 
           font.generate("./output/Minecraft-TwentyOne.ttf")
