@@ -11,12 +11,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install FontForge and autotrace
+      - name: Install FontForge
         run: |
           sudo apt-get update
-          sudo apt-get install -y fontforge autotrace
+          sudo apt-get install -y fontforge
 
-      - name: Build TTF from PNGs
+      - name: Build TTF from SVGs
         run: |
           mkdir -p output
           cat > build_font.py << 'EOF'
@@ -32,12 +32,12 @@ jobs:
           font.version = "1.0.0"
           font.copyright = "Copyright (c) 2026 PeterMaZep"
 
-          for png_file in glob.glob("./glyphs/*.png"):
-              unicode_hex = os.path.basename(png_file).replace(".png", "").replace("U+", "")
+          # Import each SVG as a glyph
+          for svg_file in glob.glob("./glyphs/*.svg"):
+              unicode_hex = os.path.basename(svg_file).replace(".svg", "").replace("U+", "")
               unicode_int = int(unicode_hex, 16)
               glyph = font.createChar(unicode_int)
-              # Import PNG and autotrace to outlines
-              glyph.importImage(png_file)
+              glyph.importOutlines(svg_file)  # SVG is vector, works perfectly
               glyph.width = 2100
 
           font.generate("./output/Minecraft-TwentyOne.ttf")
