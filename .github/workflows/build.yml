@@ -16,14 +16,14 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install bits-n-picas
+      - name: Download BitsNPicas
         run: |
-          pip install bits-n-picas
-
+          curl -L -o BitsNPicas.jar https://github.com/kreativekorp/bitsnpicas/releases/download/v2.0/BitsNPicas.jar
+      
       - name: Build TTF from PNGs
         run: |
           mkdir -p output
-          bnp-glyph-pack -f ./glyphs/ -o ./output/Minecraft-TwentyOne.ttf
+          java -jar BitsNPicas.jar -convert -format ttf -fontfile ./glyphs/ -out ./output/Minecraft-TwentyOne.ttf
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
