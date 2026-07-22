@@ -11,44 +11,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install FontForge
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y fontforge python3-fontforge
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Install fonttools
+      - name: Download BitsNPicas
         run: |
-          pip install fonttools brotli
+          curl -L -o BitsNPicas.jar https://github.com/kreativekorp/bitsnpicas/releases/download/v2.0/BitsNPicas.jar
 
       - name: Build TTF from PNGs
         run: |
           mkdir -p output
-          cat > build_font.py << 'EOF'
-          import fontforge
-          import os
-          import glob
+          java -jar BitsNPicas.jar convertbitmap \
+            -format ttf \
+            -em 2100 \
+            -family "Minecraft TwentyOne" \
+            -out ./output/Minecraft-TwentyOne.ttf \
+            ./glyphs/*.png
 
-          font = fontforge.font()
-          font.em = 2100
-          font.familyname = "Minecraft TwentyOne"
-          font.fontname = "MinecraftTwentyOne-Regular"
-          font.fullname = "Minecraft TwentyOne Regular"
-          font.version = "1.0.0"
-          font.copyright = "Copyright (c) 2026 PeterMaZep"
+      - name: Install fonttools for WOFF/WOFF2
+        run: |
+          pip install fonttools brotli
 
-          for png_file in glob.glob("./glyphs/*.png"):
-              unicode_hex = os.path.basename(png_file).replace(".png", "").replace("U+", "")
-              unicode_int = int(unicode_hex, 16)
-              glyph = font.createChar(unicode_int)
-              glyph.importOutlines(png_file)
-              glyph.width = 2100
-
-          font.generate("./output/Minecraft-TwentyOne.ttf")
-          EOF
-
-          python3 build_font.py
-
-      - name: Convert to WOFF/WOFF2
+      - name: Convert TTF to WOFF/WOFF2
         run: |
           cd output
           pyftsubset Minecraft-TwentyOne.ttf --flavor=woff --output-file=Minecraft-TwentyOne.woff
