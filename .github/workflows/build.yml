@@ -24,12 +24,10 @@ jobs:
       - name: Build TTF from PNGs
         run: |
           mkdir -p output
+          # BitsNPicas convertbitmap: input files → output file
           java -jar BitsNPicas.jar convertbitmap \
-            -format ttf \
-            -em 2100 \
-            -family "Minecraft TwentyOne" \
-            -out ./output/Minecraft-TwentyOne.ttf \
-            ./glyphs/*.png
+            ./glyphs/*.png \
+            ./output/Minecraft-TwentyOne.ttf
 
       - name: Install fonttools for WOFF/WOFF2
         run: |
