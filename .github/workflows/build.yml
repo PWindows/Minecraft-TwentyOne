@@ -11,19 +11,48 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Download BitsNPicas
+      - name: Install FontForge
         run: |
-          curl -L -o BitsNPicas.jar https://github.com/kreativekorp/bitsnpicas/releases/download/v2.0/BitsNPicas.jar
-      
+          sudo apt-get update
+          sudo apt-get install -y fontforge python3-fontforge
+
+      - name: Install fonttools
+        run: |
+          pip install fonttools brotli
+
       - name: Build TTF from PNGs
         run: |
           mkdir -p output
-          java -jar BitsNPicas.jar -convert -format ttf -fontfile ./glyphs/ -out ./output/Minecraft-TwentyOne.ttf
+          cat > build_font.py << 'EOF'
+          import fontforge
+          import os
+          import glob
+
+          font = fontforge.font()
+          font.em = 2100
+          font.familyname = "Minecraft TwentyOne"
+          font.fontname = "MinecraftTwentyOne-Regular"
+          font.fullname = "Minecraft TwentyOne Regular"
+          font.version = "1.0.0"
+          font.copyright = "Copyright (c) 2026 PeterMaZep"
+
+          for png_file in glob.glob("./glyphs/*.png"):
+              unicode_hex = os.path.basename(png_file).replace(".png", "").replace("U+", "")
+              unicode_int = int(unicode_hex, 16)
+              glyph = font.createChar(unicode_int)
+              glyph.importOutlines(png_file)
+              glyph.width = 2100
+
+          font.generate("./output/Minecraft-TwentyOne.ttf")
+          EOF
+
+          python3 build_font.py
+
+      - name: Convert to WOFF/WOFF2
+        run: |
+          cd output
+          pyftsubset Minecraft-TwentyOne.ttf --flavor=woff --output-file=Minecraft-TwentyOne.woff
+          pyftsubset Minecraft-TwentyOne.ttf --flavor=woff2 --output-file=Minecraft-TwentyOne.woff2
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
