@@ -11,19 +11,49 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install bits-n-picas
+      - name: Install FontForge and autotrace
         run: |
-          pip install bits-n-picas
+          sudo apt-get update
+          sudo apt-get install -y fontforge autotrace
 
       - name: Build TTF from PNGs
         run: |
           mkdir -p output
-          bnp-glyph-pack -f ./glyphs/ -o ./output/Minecraft-TwentyOne.ttf
+          cat > build_font.py << 'EOF'
+          import fontforge
+          import glob
+          import os
+
+          font = fontforge.font()
+          font.em = 2100
+          font.familyname = "Minecraft TwentyOne"
+          font.fontname = "MinecraftTwentyOne-Regular"
+          font.fullname = "Minecraft TwentyOne Regular"
+          font.version = "1.0.0"
+          font.copyright = "Copyright (c) 2026 PeterMaZep"
+
+          for png_file in glob.glob("./glyphs/*.png"):
+              unicode_hex = os.path.basename(png_file).replace(".png", "").replace("U+", "")
+              unicode_int = int(unicode_hex, 16)
+              glyph = font.createChar(unicode_int)
+              # Import PNG and autotrace to outlines
+              glyph.importImage(png_file)
+              glyph.width = 2100
+
+          font.generate("./output/Minecraft-TwentyOne.ttf")
+          EOF
+
+          python3 build_font.py
+
+      - name: Install fonttools for WOFF/WOFF2
+        run: |
+          pip install fonttools brotli
+
+      - name: Convert TTF to WOFF/WOFF2
+        run: |
+          cd output
+          pyftsubset Minecraft-TwentyOne.ttf --flavor=woff --output-file=Minecraft-TwentyOne.woff
+          pyftsubset Minecraft-TwentyOne.ttf --flavor=woff2 --output-file=Minecraft-TwentyOne.woff2
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
